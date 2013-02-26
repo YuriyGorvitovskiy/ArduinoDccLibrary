@@ -3,7 +3,7 @@ Arduino Dcc Library
 
 Arduino libraries for building DCC Command Station.
 
-Also, Privides Example to build simple WiFi Dcc Station.
+Also, privides example to build simple WiFi Dcc Station.
 
 *********************************************************************
 This is PUBLIC DOMAIN SOFTWARE.
