@@ -72,17 +72,23 @@ inline void DccQueue::push(DccPacket* packet) {
 
 inline void DccQueue::add(DccPacket* packet) {
 	packet->next = NULL;
-	if (last != NULL)
-		last = last->next = packet;
-	else
-		first = last = packet;
+	
+	// add() can be interrupted by next() call and should be safe
+	// at every atomic operation 
+	DccPacket* lst = last;
+	if (lst != NULL)
+		lst->next = packet;
+		
+	last = packet;
+	if (first == NULL)
+		first = last;
 }
 
 inline DccPacket* DccQueue::next() {
 	DccPacket* packet = first;
 	if (packet != NULL) {
 		first = packet->next;
-		if (first == NULL)
+		if (packet == last)
 			last = NULL;
 	}
 	return packet;

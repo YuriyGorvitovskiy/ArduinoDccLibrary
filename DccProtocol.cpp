@@ -71,6 +71,8 @@ boolean DccProtocol::power() {
 	return state == STATE_POWER_OFF;
 }
 
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
+
 void DccProtocol::configureTimer() {
     // Initialize Timer/Counter Control Register http://www.atmel.com/Images/doc8161.pdf
     
@@ -124,13 +126,97 @@ void DccProtocol::disableTimer() {
     TIMSK1 = (0 << ICIE1) | (0 << OCIE1B) | (0 << OCIE1A) | (0 << TOIE1);
 }
 
+#define SET_COUNTER(v) OCR1A = (v)
+
+// This is the Interrupt Service Routine (ISR) for Timer1 compare match.
+ISR(TIMER1_COMPA_vect) {
+    DccRails.timerInterrupt();
+}
+
+#elif defined(__MK20DX128__)
+
+#define DCC_TIMER 0
+
+#if (DCC_TIMER == 0)
+
+#define DCC_SIM_SCGC6_FTM    SIM_SCGC6_FTM0
+#define DCC_FTM_MODE         FTM0_MODE
+#define DCC_FTM_CNT          FTM0_CNT
+#define DCC_FTM_MOD          FTM0_MOD
+#define DCC_FTM_SC           FTM0_SC
+#define DCC_IRQ_FTM          IRQ_FTM0
+#define DCC_FTM_ISR          ftm0_isr
+
+#elif (DCC_TIMER == 1)
+
+#define DCC_SIM_SCGC6_FTM    SIM_SCGC6_FTM1
+#define DCC_FTM_MODE         FTM1_MODE
+#define DCC_FTM_CNT          FTM1_CNT
+#define DCC_FTM_MOD          FTM1_MOD
+#define DCC_FTM_SC           FTM1_SC
+#define DCC_IRQ_FTM          IRQ_FTM1
+#define DCC_FTM_ISR          ftm1_isr
+
+#else
+
+#error Unsupported DCC_TIMER value
+
+#endif
+
+#define ONN(v)  (v)
+#define off(v)  (0)
+
+
+void DccProtocol::configureTimer() {
+    SIM_SCGC6    |= DCC_SIM_SCGC6_FTM; // Enable FTM1 Clock Gate Control
+    DCC_FTM_MODE |= FTM_MODE_WPDIS; // Disable Write Protection
+}
+
+void DccProtocol::enableTimer() {
+    DCC_FTM_CNT = 0;                         //Counter Start
+    DCC_FTM_MOD = FTM_MOD_FOR_MILLISEC(100); //Counter Stop
+    
+    DCC_FTM_SC = off(FTM_SC_TOF)                  // <==> RESET Timer Overflow Flag. 
+               | ONN(FTM_SC_TOIE)                 // <==> Enable TOF interrupts. An interrupt is generated when TOF equals one
+               | off(FTM_SC_CPWMS)                // <==> FTM counter operates in Up Counting mode (vs. Up & Down)
+               | FTM_SC_CLKS(1)                   // <==> Clock Source Selection, b01 - System clock
+               | FTM_SC_PS(FTM_PRESCALE_FACTOR)   // <==> Clock Prescale Factor
+    ;
+            
+	dcc_positive = true;
+    
+    NVIC_ENABLE_IRQ(DCC_IRQ_FTM); // enable the interrupt
+}
+
+void DccProtocol::disableTimer() {
+    NVIC_DISABLE_IRQ(DCC_IRQ_FTM); // disable the interrupt
+
+    DCC_FTM_CNT = 0;                         //Counter Start
+    DCC_FTM_MOD = 0; //Counter Stop
+    
+    DCC_FTM_SC = off(FTM_SC_TOF)                  // <==> RESET Timer Overflow Flag. 
+               | off(FTM_SC_TOIE)                 // <==> Disable TOF interrupts. An interrupt is generated when TOF equals one
+               | off(FTM_SC_CPWMS)                // <==> FTM counter operates in Up Counting mode (vs. Up & Down)
+               | FTM_SC_CLKS(0)                   // <==> Clock Source Selection, b00 - No clock
+               | FTM_SC_PS(0)   				  // <==> Clock Prescale Factor
+    ;
+}
+
+void ftm1_isr(void) {
+    DccRails.timerInterrupt();
+}
+
+#define SET_COUNTER(v) DCC_FTM_SC &= ~(FTM_SC_TOF); DCC_FTM_MOD = (v)
+
+#endif
+
 void DccProtocol::timerInterrupt() {
     if (state == STATE_CUTOUT_WAIT) {
         digitalWrite(DCC_PIN_OUT_A, LOW);
         digitalWrite(DCC_PIN_OUT_B, LOW);
         
         state = STATE_CUTOUT_RUN;
-        OCR1A = packet->isAcknowledgeShort() ? TIMER_COUNT_CUTOUT_END_1 : TIMER_COUNT_CUTOUT_END_2;
+        SET_COUNTER(packet->isAcknowledgeShort() ? TIMER_COUNT_CUTOUT_END_1 : TIMER_COUNT_CUTOUT_END_2);
         
         dcc_positive = true; // to be sure that we come to switch after cutout
         return;
@@ -153,7 +239,7 @@ void DccProtocol::timerInterrupt() {
             end_byte     = current_byte + packet->size();
             current_bit  = 0x80;
             state = STATE_BYTE_START_BIT;
-            OCR1A = TIMER_COUNT_SEND_0;
+            SET_COUNTER(TIMER_COUNT_SEND_0);
             return;
             
         case STATE_BYTE_START_BIT:
@@ -162,35 +248,31 @@ void DccProtocol::timerInterrupt() {
             //No return intentiosionally to follow into case STATE_SEND_BYTE;
         case STATE_SEND_BYTE:
             if (current_bit) {
-                OCR1A = ((*current_byte) & current_bit) ? TIMER_COUNT_SEND_1 : TIMER_COUNT_SEND_0;
+                SET_COUNTER(((*current_byte) & current_bit) ? TIMER_COUNT_SEND_1 : TIMER_COUNT_SEND_0);
                 current_bit >>= 1;
                 return;
             }
             if (++current_byte == end_byte) {
                 state = STATE_PACKET_END_BIT;
-                OCR1A = TIMER_COUNT_SEND_1;
+                SET_COUNTER(TIMER_COUNT_SEND_1);
                 return;
             }
             state = STATE_BYTE_START_BIT;
-            OCR1A = TIMER_COUNT_SEND_0;
+            SET_COUNTER(TIMER_COUNT_SEND_0);
             return;    
             
         case STATE_PACKET_END_BIT:
             if (packet->hasAcknowledge()) {
                 state = STATE_CUTOUT_WAIT;
-                OCR1A = TIMER_COUNT_CUTOUT_START;
+                SET_COUNTER(TIMER_COUNT_CUTOUT_START);
                 return;
             }
-         //No return intentionally to follow into case STATE_CUTOUT_RUN;
+         	//No return intentionally to follow into case STATE_CUTOUT_RUN;
         case STATE_CUTOUT_RUN:
             current_bit = DCC_PREAMBULE_SIZE;
             state = STATE_PREAMBULE;
-            OCR1A = TIMER_COUNT_SEND_1;
+            SET_COUNTER(TIMER_COUNT_SEND_1);
             return;
     }
 }
 
-// This is the Interrupt Service Routine (ISR) for Timer1 compare match.
-ISR(TIMER1_COMPA_vect) {
-    DccRails.timerInterrupt();
-}

@@ -41,8 +41,10 @@
  *   - In that case if pinA = 0 and pinB = 0 the output between 2 pins is 0 - cutout.
  * 
  * To switch pins in the proper time we will use timer. Good article: http://letsmakerobots.com/node/28278
- *
- * There are at least 3 timers in ATmega168 and ATmega328:
+ */
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328__)  || defined(__AVR_ATmega328P__) 
+
+/** There are at least 3 timers in ATmega168 and ATmega328:
  *   - Timer 0: is  8-bit counter, used by system functions like delay() and better to be avoided to be used. For example, using it will break WiFi commnication,
  *   - Timer 1: is 16-bit counter, will be used by us,
  *   - Timer 2: is  8-bit counter, could't be used, because it doesn't have enough precission to support DCC writing and Reading Decoder Feedback.
@@ -52,7 +54,7 @@
  *   - Timer 1: pin  9 & pin 10
  *   - Timer 2: pin 11 & pin  3
  *
- * To cacth conflict with other library, or shield on pins is very easy. For example on RedBack WiFi board pins 9-14 are used to communicate with WiFi chip.
+ * To catch conflict with other library, or shield on pins is very easy. For example on RedBack WiFi board pins 9-14 are used to communicate with WiFi chip.
  *
  * To avoid this conflict, and reliably generate DCC signal we will:
  *    1. Disable pin usage by the timer,
@@ -82,6 +84,7 @@
  *
  */
 
+#if (F_CPU == 16000000L)
 
 // Timer delay to send bit with value 0 on DCC rail = 100us
 #define  TIMER_COUNT_SEND_0       (199) 
@@ -98,7 +101,63 @@
 // Timer delay for cutout to recieve 2 byte feedback from decoder =  448us - 28us = 420us
 #define  TIMER_COUNT_CUTOUT_END_2 (839) 
 
+#else
 
+#error Unsupported CPU speed
+
+#endif //F_CPU
+
+#elif defined(__MK20DX128__)
+
+/** There are 2 timers on MK20DX128:
+ *   - Timer 0: is 16-bit counter, used by system functions like delay() and better to be avoided to be used. For example, using it will break WiFi commnication,
+ *   - Timer 1: is 16-bit counter, will be used by us,
+ */
+// Allowed only 0 or 1
+#define DCC_TIMER 0
+
+/**
+ * Timer Count is a value that defines the time between interrupt calls. In our case it defines the time of next interrupt call.
+ * To calculte timer_count we will use the following formula: http://www.instructables.com/id/Arduino-Timer-Interrupts/
+ *
+ *    (interrupt frequency (Hz)) = (Arduino clock speed(Hz)) / (prescaler * (compare match register + 1))
+ *
+ *      - Arduino clock speed      = for Teense 3.0 is 24,000,000Hz, 48,000,000Hz, 96,000,000Hz
+ *      - compare match register   = timer_counter
+ *      - interrupt frequency (Hz) = 1,000,000 / interrupt_delay(us) 
+ *      - interrupt frequency (Hz) = 1,000     / interrupt_delay(ms) 
+ *      - prescalar                = 8 (you can use 1, 2, 4, 8, 32, 64, 128)
+ *
+ *    (prescaler * (compare match register + 1)) = (Arduino clock speed(Hz)) / (interrupt frequency (Hz));
+ *     compare match register = (Arduino clock speed(Hz)) / ((interrupt frequency (Hz)) * prescaler) - 1;
+ *     compare match register = (Arduino clock speed(Hz)) * interrupt_delay(us) / (1,000,000 * prescaler) - 1;
+ *     compare match register = (Arduino clock speed(Hz)) * interrupt_delay(ms) / (1,000     * prescaler) - 1;
+ */
+#define FTM_PRESCALE_FACTOR      (3)
+#define FTM_PRESCALE             (1 << FTM_PRESCALE_FACTOR)
+#define FTM_MOD_FOR_MICROSEC(us) (((F_CPU/1000000)*(us)/FTM_PRESCALE) - 1)
+#define FTM_MOD_FOR_MILLISEC(ms) (((F_CPU/1000)*(ms)/FTM_PRESCALE) - 1)
+
+// Timer delay to send bit with value 0 on DCC rail = 100us
+#define  TIMER_COUNT_SEND_0       	FTM_MOD_FOR_MICROSEC(100) 
+
+// Timer delay to send bit with value 1 on DCC rail = 58us
+#define  TIMER_COUNT_SEND_1       	FTM_MOD_FOR_MICROSEC(58) 
+
+// Timer delay after last packet bit to DCC rail cutout = 28us
+#define  TIMER_COUNT_CUTOUT_START  	FTM_MOD_FOR_MICROSEC(28) 
+
+// Timer delay for cutout to recieve 1 byte feedback from decoder = 224us - 28us = 196us
+#define  TIMER_COUNT_CUTOUT_END_1 	FTM_MOD_FOR_MICROSEC(196) 
+
+// Timer delay for cutout to recieve 2 byte feedback from decoder =  448us - 28us = 420us
+#define  TIMER_COUNT_CUTOUT_END_2 	FTM_MOD_FOR_MICROSEC(420) 
+
+#else
+
+#error Unsupported CPU type
+
+#endif //CPU TYPE
 
 /**
  	EXTRACT FROM:  	Extended Packet Formats For Digital Command Control, All Scales
