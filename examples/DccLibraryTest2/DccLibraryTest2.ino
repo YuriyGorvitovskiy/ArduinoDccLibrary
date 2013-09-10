@@ -26,14 +26,17 @@ boolean success = true;
 void setup() {
    Serial.begin(115200);
 
+   //Teensy 3.0 required some time before Serial become functional.
+   delay(500);
+
    success = (DccStackTest::testAll() && success);
    success = (DccQueueTest::testAll() && success);
-
 
    pinMode(LED, OUTPUT);
 }
 
 void loop() {
+
     digitalWrite(LED, HIGH);
     delay(success ? 1000 : 200);
     digitalWrite(LED, LOW);

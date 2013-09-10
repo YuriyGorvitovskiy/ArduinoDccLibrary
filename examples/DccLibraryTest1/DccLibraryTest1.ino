@@ -24,8 +24,12 @@ boolean success = true;
 
 void setup() {
    Serial.begin(115200);
+   
+   //Teensy 3.0 required some time before Serial become functional.
+   delay(500);
+   
    success = (DccStandardTest::testAll() && success);
-   success = (DccProtocolTest::testAll() && success);
+   //success = (DccProtocolTest::testAll() && success);
    success = (DccStateKeeperTest::testAll() && success);
 
    pinMode(LED, OUTPUT);

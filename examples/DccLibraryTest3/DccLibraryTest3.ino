@@ -15,7 +15,7 @@
 #include <DccStandard.h>
 #include <DccPacket.h>
 #include <DccCollection.h>
-#include <DccSteteKeeper.h>
+#include <DccStateKeeper.h>
 
 #include "DccPacketTest.h"
 
@@ -26,6 +26,9 @@ boolean success = true;
 
 void setup() {
    Serial.begin(115200);
+
+   //Teensy 3.0 required some time before Serial become functional.
+   delay(500);
 
    success = (DccPacketTest::testAll() && success);
    

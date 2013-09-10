@@ -37,10 +37,24 @@ byte  statistics[STATISTICS_SIZE_MAX];
 
 DccPacket DccProtocolTest::TEST;
 
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
+
+#define TIMER_COUNTER_REGISTER     OCR1A 
+
+#elif defined(__MK20DX128__) && (DCC_TIMER == 0)
+
+#define TIMER_COUNTER_REGISTER     FTM0_MOD
+
+#elif defined(__MK20DX128__) && (DCC_TIMER == 1)
+
+#define TIMER_COUNTER_REGISTER     FTM1_MOD
+
+#endif
+
 byte DccProtocolTest::readState() {
     byte    v = digitalRead(DCC_PIN_OUT_A) ? PIN_A_ON : PIN_A_OFF;
     boolean same = (digitalRead(DCC_PIN_OUT_B) == digitalRead(DCC_PIN_OUT_A));
-    switch(OCR1A) {
+    switch(TIMER_COUNTER_REGISTER) {
         case TIMER_COUNT_SEND_0:       v |= (same ? TIMER_OUTPUT_WRONG_B : TIMER_OUTPUT_SEND_0);       break;
         case TIMER_COUNT_SEND_1:       v |= (same ? TIMER_OUTPUT_WRONG_B : TIMER_OUTPUT_SEND_1);       break;
         case TIMER_COUNT_CUTOUT_START: v |= (same ? TIMER_OUTPUT_WRONG_B : TIMER_OUTPUT_CUTOUT_START); break;

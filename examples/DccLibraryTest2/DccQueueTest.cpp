@@ -180,7 +180,7 @@ void DccQueueTest::testReplaceSpeedKindPacket() {
     ASSERT(pack1.repeat() == DCC_REPEAT_SPEED);                        //5
     ASSERT(pack1.size() == 3);
     ASSERT(pack1.dcc_data[0] == 0x23);
-    ASSERT(pack1.dcc_data[1] == DCC_MF_KIND3_FORWARD_OPERATION | 0xA);
+    ASSERT(pack1.dcc_data[1] == (DCC_MF_KIND3_FORWARD_OPERATION | 0xA));
 
     ASSERT(pack2.repeat() == 0);
     ASSERT(pack2.size() == 5);                                        //10
@@ -199,7 +199,7 @@ void DccQueueTest::testReplaceSpeedKindPacket() {
     ASSERT(pack1.repeat() == DCC_REPEAT_SPEED);
     ASSERT(pack1.size() == 3);                                        //20
     ASSERT(pack1.dcc_data[0] == 0x23);
-    ASSERT(pack1.dcc_data[1] == DCC_MF_KIND3_REVERSE_OPERATION | 0xC);
+    ASSERT(pack1.dcc_data[1] == (DCC_MF_KIND3_REVERSE_OPERATION | 0xC));
 
     ASSERT(pack2.repeat() == 0);
     ASSERT(pack2.size() == 5);
@@ -220,7 +220,7 @@ void DccQueueTest::testReplaceSpeedKindPacket() {
     ASSERT(pack1.repeat() == 0);
     ASSERT(pack1.size() == 3);                                       //35                          
     ASSERT(pack1.dcc_data[0] == 0x23);
-    ASSERT(pack1.dcc_data[1] == DCC_MF_KIND3_REVERSE_OPERATION | 0xD);
+    ASSERT(pack1.dcc_data[1] == (DCC_MF_KIND3_FORWARD_OPERATION | 0x16));
 
     ASSERT(pack2.repeat() == 0);
     ASSERT(pack2.size() == 5);
