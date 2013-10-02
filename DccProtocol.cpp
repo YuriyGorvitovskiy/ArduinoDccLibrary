@@ -126,6 +126,7 @@ void DccProtocol::disableTimer() {
     TIMSK1 = (0 << ICIE1) | (0 << OCIE1B) | (0 << OCIE1A) | (0 << TOIE1);
 }
 
+#define RESET_INTERRUPT()
 #define SET_COUNTER(v) OCR1A = (v)
 
 // This is the Interrupt Service Routine (ISR) for Timer1 compare match.
@@ -191,8 +192,8 @@ void DccProtocol::enableTimer() {
 void DccProtocol::disableTimer() {
     NVIC_DISABLE_IRQ(DCC_IRQ_FTM); // disable the interrupt
 
-    DCC_FTM_CNT = 0;                         //Counter Start
-    DCC_FTM_MOD = 0; //Counter Stop
+    DCC_FTM_CNT = 0;    //Counter Start
+    DCC_FTM_MOD = 0; 	//Counter Stop
     
     DCC_FTM_SC = off(FTM_SC_TOF)                  // <==> RESET Timer Overflow Flag. 
                | off(FTM_SC_TOIE)                 // <==> Disable TOF interrupts. An interrupt is generated when TOF equals one
@@ -202,11 +203,12 @@ void DccProtocol::disableTimer() {
     ;
 }
 
-void ftm1_isr(void) {
+void DCC_FTM_ISR(void) {
     DccRails.timerInterrupt();
 }
 
-#define SET_COUNTER(v) DCC_FTM_SC &= ~(FTM_SC_TOF); DCC_FTM_MOD = (v)
+#define RESET_INTERRUPT() DCC_FTM_SC &= ~(FTM_SC_TOF)
+#define SET_COUNTER(v) DCC_FTM_MOD = (v)
 
 #endif
 
@@ -215,8 +217,14 @@ void DccProtocol::timerInterrupt() {
         digitalWrite(DCC_PIN_OUT_A, LOW);
         digitalWrite(DCC_PIN_OUT_B, LOW);
         
-        state = STATE_CUTOUT_RUN;
-        SET_COUNTER(packet->isAcknowledgeShort() ? TIMER_COUNT_CUTOUT_END_1 : TIMER_COUNT_CUTOUT_END_2);
+        RESET_INTERRUPT();
+        //first time in STATE_CUTOUT_WAIT dcc_positive is FALSE
+        if (dcc_positive || packet->isAcknowledgeShort()) {
+	        state = STATE_CUTOUT_RUN;
+    	    SET_COUNTER(TIMER_COUNT_CUTOUT_END_1);
+	    } else {
+    	    SET_COUNTER(TIMER_COUNT_CUTOUT_END_2);
+    	}
         
         dcc_positive = true; // to be sure that we come to switch after cutout
         return;
@@ -225,8 +233,8 @@ void DccProtocol::timerInterrupt() {
     digitalWrite(DCC_PIN_OUT_B, dcc_positive ? HIGH : LOW);
 
     dcc_positive = !dcc_positive;
-    
-    if (dcc_positive) 
+    RESET_INTERRUPT();
+    if (dcc_positive)
         return;
     
     switch(state) {
@@ -241,11 +249,11 @@ void DccProtocol::timerInterrupt() {
             state = STATE_BYTE_START_BIT;
             SET_COUNTER(TIMER_COUNT_SEND_0);
             return;
-            
+             
         case STATE_BYTE_START_BIT:
             state = STATE_SEND_BYTE;
             current_bit = 0x80;
-            //No return intentiosionally to follow into case STATE_SEND_BYTE;
+            //No return intentionally to follow into case STATE_SEND_BYTE;
         case STATE_SEND_BYTE:
             if (current_bit) {
                 SET_COUNTER(((*current_byte) & current_bit) ? TIMER_COUNT_SEND_1 : TIMER_COUNT_SEND_0);

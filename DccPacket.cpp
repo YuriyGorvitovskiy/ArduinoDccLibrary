@@ -79,11 +79,12 @@ boolean DccPacket::parseDccTextMFCommand(const char*& s) {
 		case 'r': speed28(false, parseNumber(s)); return true;
 		case 'F': speed128(true, parseNumber(s)); return true;
 		case 'R': speed128(false, parseNumber(s)); return true;
-		case 'A': functionF0_F4(parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++)); return true;
-		case 'B': functionF5_F8(parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++)); return true;
-		case 'C': functionF9_F12(parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++)); return true;
-		case 'D': functionF13_F20(parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++)); return true;
-		case 'E': functionF21_F28(parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++), parseBoolean(*s++)); return true;
+		case 'A': functionF0_F4(parseBoolean(s[0]), parseBoolean(s[1]), parseBoolean(s[2]), parseBoolean(s[3]), parseBoolean(s[4])); s+=5; return true;
+		case 'B': functionF5_F8(parseBoolean(s[0]), parseBoolean(s[1]), parseBoolean(s[2]), parseBoolean(s[3])); s+=4; return true;
+		case 'C': functionF9_F12(parseBoolean(s[0]), parseBoolean(s[1]), parseBoolean(s[2]), parseBoolean(s[3])); s+=4; return true;
+		case 'D': functionF13_F20(parseBoolean(s[0]), parseBoolean(s[1]), parseBoolean(s[2]), parseBoolean(s[3]), parseBoolean(s[4]), parseBoolean(s[5]), parseBoolean(s[6]), parseBoolean(s[7])); s+=8; return true;
+		case 'E': functionF21_F28(parseBoolean(s[0]), parseBoolean(s[1]), parseBoolean(s[2]), parseBoolean(s[3]), parseBoolean(s[4]), parseBoolean(s[5]), parseBoolean(s[6]), parseBoolean(s[7])); s+=8; return true;
+		default: break;
 	}
 	return false;
 }

@@ -98,8 +98,8 @@
 // Timer delay for cutout to recieve 1 byte feedback from decoder = 224us - 28us = 196us
 #define  TIMER_COUNT_CUTOUT_END_1 (391) 
 
-// Timer delay for cutout to recieve 2 byte feedback from decoder =  448us - 28us = 420us
-#define  TIMER_COUNT_CUTOUT_END_2 (839) 
+// Timer delay for cutout to recieve 2 byte feedback from decoder - TIMER_COUNT_CUTOUT_END_1 =  448us - 196us = 252us
+#define  TIMER_COUNT_CUTOUT_END_2 (553) 
 
 #else
 
@@ -126,17 +126,19 @@
  *      - compare match register   = timer_counter
  *      - interrupt frequency (Hz) = 1,000,000 / interrupt_delay(us) 
  *      - interrupt frequency (Hz) = 1,000     / interrupt_delay(ms) 
- *      - prescalar                = 8 (you can use 1, 2, 4, 8, 32, 64, 128)
+ *      - prescalar                = 8 (you can use 1, 2, 4, 8, 16, 32, 64, 128)
  *
  *    (prescaler * (compare match register + 1)) = (Arduino clock speed(Hz)) / (interrupt frequency (Hz));
  *     compare match register = (Arduino clock speed(Hz)) / ((interrupt frequency (Hz)) * prescaler) - 1;
  *     compare match register = (Arduino clock speed(Hz)) * interrupt_delay(us) / (1,000,000 * prescaler) - 1;
  *     compare match register = (Arduino clock speed(Hz)) * interrupt_delay(ms) / (1,000     * prescaler) - 1;
  */
-#define FTM_PRESCALE_FACTOR      (3)
+// Counter has to fit into 1 Byte value. 
+// With range from 28us - 252us the best Prescalar is 64
+#define FTM_PRESCALE_FACTOR      (6)
 #define FTM_PRESCALE             (1 << FTM_PRESCALE_FACTOR)
-#define FTM_MOD_FOR_MICROSEC(us) (((F_CPU/1000000)*(us)/FTM_PRESCALE) - 1)
-#define FTM_MOD_FOR_MILLISEC(ms) (((F_CPU/1000)*(ms)/FTM_PRESCALE) - 1)
+#define FTM_MOD_FOR_MICROSEC(us) (((F_CPU/1000000L)*(us)/FTM_PRESCALE) - 1)
+#define FTM_MOD_FOR_MILLISEC(ms) (((F_CPU/1000L)*(ms)/FTM_PRESCALE) - 1)
 
 // Timer delay to send bit with value 0 on DCC rail = 100us
 #define  TIMER_COUNT_SEND_0       	FTM_MOD_FOR_MICROSEC(100) 
@@ -150,8 +152,8 @@
 // Timer delay for cutout to recieve 1 byte feedback from decoder = 224us - 28us = 196us
 #define  TIMER_COUNT_CUTOUT_END_1 	FTM_MOD_FOR_MICROSEC(196) 
 
-// Timer delay for cutout to recieve 2 byte feedback from decoder =  448us - 28us = 420us
-#define  TIMER_COUNT_CUTOUT_END_2 	FTM_MOD_FOR_MICROSEC(420) 
+// Timer delay for cutout to recieve 2 byte feedback from decoder - TIMER_COUNT_CUTOUT_END_1 =  448us - 196us = 252us
+#define  TIMER_COUNT_CUTOUT_END_2 	FTM_MOD_FOR_MICROSEC(252) 
 
 #else
 
