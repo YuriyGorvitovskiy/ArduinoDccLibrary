@@ -32,7 +32,7 @@ private:
 	
 	 
 public:
-	void 		setup();
+	void 		begin();
 	
 	void 		power(boolean on);
 	boolean 	power();

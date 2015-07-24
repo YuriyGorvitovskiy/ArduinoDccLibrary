@@ -108,7 +108,7 @@ void setup() {
     Serial_printMACAddress();
     Serial_printConnectionState();
 
-    DccCmd.setup();
+    DccCmd.begin();
     Serial.println("Ready");
 }
 

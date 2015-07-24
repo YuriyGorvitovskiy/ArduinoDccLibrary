@@ -24,7 +24,7 @@ private:
 public:
 	DccCommander();
 
-	void setup();
+	void begin();
 	void loop();
 
 	DccPacket* 	nextPacketToSend(DccPacket* sent);

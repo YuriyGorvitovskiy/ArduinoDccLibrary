@@ -1,7 +1,7 @@
 /**
  ** This is Public Domain Software.
- ** 
- ** The author disclaims copyright to this source code.  
+ **
+ ** The author disclaims copyright to this source code.
  ** In place of a legal notice, here is a blessing:
  **
  **    May you do good and not evil.
@@ -19,7 +19,7 @@
 
 // Dcc Data Packet Size
 //======================================================
-// (dcc_info & 0xC0) == 0x00 packet Size 3 bytes 
+// (dcc_info & 0xC0) == 0x00 packet Size 3 bytes
 // (dcc_info & 0xC0) == 0x40 packet Size 4 bytes
 // (dcc_info & 0xC0) == 0x80 packet Size 5 bytes
 // (dcc_info & 0xC0) == 0xC0 packet Size 6 bytes
@@ -47,8 +47,8 @@
 
 // Dcc Packet Repeat
 //======================================================
-// (dcc_info & 0x0F) <= 0x0F repeat count 
-// (dcc_info & 0x0F) == 0x00 processed 
+// (dcc_info & 0x0F) <= 0x0F repeat count
+// (dcc_info & 0x0F) == 0x00 processed
 #define DCC_INFO_REPEAT_MASK               (0x0F)
 
 #define DCC_INFO_NO_REPEAT                 (0x00)
@@ -64,7 +64,7 @@
 struct DccPacket {
 
 public:
-  
+
     //+----------------------------------------------------+
     //| DCC Packet Info (size, acknowledgement, repeat)	   |
     //+----------------------------------------------------+
@@ -74,12 +74,12 @@ public:
     //|        Actual DCC Packet With ERROR byte           |
     //+----------------------------------------------------+
     byte                       dcc_data[DCC_DATA_SIZE_MAX];
-    
+
     //+----------------------------------------------------+
     //| Reference To the NEXT DCC packet in Queue or Stack |
     //+----------------------------------------------------+
-    DccPacket*                 next;     
-    
+    DccPacket*                 next;
+
 public:
 	// dcc_info functions
 	byte 		size();
@@ -88,28 +88,28 @@ public:
 	boolean 	hasAcknowledge();
 	boolean 	isAcknowledgeShort();
 
-	byte     	repeat(); 
+	byte     	repeat();
 	byte     	decrementRepeat();
-	void     	resetRepeat(); 
+	void     	resetRepeat();
 
 	// dcc_data functions
-	boolean 	isIdle();    
-	
-	boolean 	isMultiFunction();    
-	boolean 	isMultiFunctionBroadcast();    
+	boolean 	isIdle();
+
+	boolean 	isMultiFunction();
+	boolean 	isMultiFunctionBroadcast();
 	boolean 	isAddressShort();
-	
-	boolean 	isAccessory();    
-	boolean 	isBasicAccessory();    
-	boolean 	isBasicAccessoryBroadcast();    
-	boolean 	isExtendedAccessory();    
-	boolean 	isExtendedAccessoryBroadcast();    
-	
+
+	boolean 	isAccessory();
+	boolean 	isBasicAccessory();
+	boolean 	isBasicAccessoryBroadcast();
+	boolean 	isExtendedAccessory();
+	boolean 	isExtendedAccessoryBroadcast();
+
 	boolean 	isBroadcast();
-	
+
 public:
 	// Building Functions
-	
+
 	// Process Dcc Hex Command
 	// All Hex Characters are CAPITAL
 	// dcc_info, dcc_data[0], ..., dcc_data[dcc_info_size-1]
@@ -118,48 +118,48 @@ public:
 	// Process Dcc Text Command
 	// All Numbers are decimal
 	// Has to parts: Address, and Command
-	
+
 	// Address:
 	// m### - Short Multi Function Address (7bit). Missing # or 0 - Broadcast
 	// M#### - Long Multi Function Address (14bit)
 	// B####P#O# - Basic Accessory Decoder Address (9bit), Port, Output. Missing # or 511 - Broadcast
 	// E#### - Extended Accessory Decoder Address (11bit). Missing # or 2047 - Broadcast
-	
+
 	// Command for Multi Function:
 	// f###:   Forward Speed (28steps):  0,1 - stop, 2,3 - Emergency Stop
-	// r###:   Reverse Speed (28steps):  0,1 - stop, 2,3 - Emergency Stop 
+	// r###:   Reverse Speed (28steps):  0,1 - stop, 2,3 - Emergency Stop
 	// F###:   Forward Speed (127steps): 0 - stop, 1 - Emergency Stop
-	// R###:   Reverse Speed (127steps): 0 - stop, 1 - Emergency Stop 
+	// R###:   Reverse Speed (127steps): 0 - stop, 1 - Emergency Stop
 	// A#####:    Function Set F0,   F1,  F2,  F3,  F4 					  (0/1 per position)
 	// B####:  	  Function Set F5,   F6,  F7,  F8 	  					  (0/1 per position)
 	// C####:  	  Function Set F9,  F10, F11, F12  	  					  (0/1 per position)
 	// D########: Function Set F13, F14, F15, F16, F17, F18, F19, F20  	  (0/1 per position)
 	// E########: Function Set F21, F22, F23, F24, F25, F26, F27, F28  	  (0/1 per position)
-	
+
 	// Command for Basic Accessory:
 	// A:    Activate Basic Accessory
 	// D:    Deactivate Basic Accessory
-	
+
 	// Command for Extended Accessory:
 	// S##:  Set State
-	
+
 	DccPacket*  parseDccTextCommand(const char* s);
-	
+
 	//Idle
 	DccPacket* idle();
-	
+
 	// Multi-Function
 	DccPacket& mfBroadcast();
 	DccPacket& mfAddress7 (byte address);
 	DccPacket& mfAddress14(word address);
 	DccPacket& mfAddress(byte address0, byte address1);
-	
+
 	DccPacket* speed14 (boolean forward, byte speed);
 	DccPacket* speed28 (boolean forward, byte speed);
 	DccPacket* speed128(boolean forward, byte speed);
 	DccPacket* speed28(byte dcc_bits);
 	DccPacket* speed128(byte dcc_bits);
-	
+
 	DccPacket* functionF0_F4  (boolean f0,  boolean f1,  boolean f2,  boolean f3,  boolean f4);
 	DccPacket* functionF5_F8  (boolean f5,  boolean f6,  boolean f7,  boolean f8);
 	DccPacket* functionF9_F12 (boolean f9,  boolean f10, boolean f11, boolean f12);
@@ -170,22 +170,22 @@ public:
 	DccPacket* functionF9_F12 (byte dcc_bits);
 	DccPacket* functionF13_F20(byte dcc_bits);
 	DccPacket* functionF21_F28(byte dcc_bits);
-	
+
 	DccPacket* mfCommand1(byte command);
 	DccPacket* mfCommand2(byte command1, byte command2);
-	
+
 	// Basic Accessory
 	DccPacket& baBroadcast(byte port, byte output);
 	DccPacket& baAddress  (word address, byte port, byte output);
 
 	DccPacket* activate(boolean on);
-	
+
 	// Extended Accessory
 	DccPacket& eaBroadcast();
 	DccPacket& eaAddress  (word address);
-	
+
 	DccPacket* state(byte newState);
-	
+
 public:
 	boolean parseDccTextMFCommand(const char*& s);
 	boolean parseDccTextBACommand(const char*& s);
@@ -195,7 +195,7 @@ public:
 	static boolean 	isDigit(char ch);
 	static boolean  parseBoolean(char ch);
 	static word 	parseNumber(const char*& ch);
-	
+
 };
 
 inline byte DccPacket::size() {
@@ -221,7 +221,7 @@ inline byte DccPacket::repeat() {
 inline byte DccPacket::decrementRepeat() {
 	if (repeat() > 0)
 		--dcc_info;
-		
+
 	return repeat();
 }
 
@@ -229,41 +229,41 @@ inline void DccPacket::resetRepeat() {
 	dcc_info &= ~DCC_INFO_REPEAT_MASK;
 }
 
-inline byte DccPacket::isIdle() {
+inline boolean DccPacket::isIdle() {
 	return (dcc_data[0] == DCC_ADDRESS_IDLE);
 }
 
-inline byte DccPacket::isMultiFunctionBroadcast() {
+inline boolean DccPacket::isMultiFunctionBroadcast() {
 	return (dcc_data[0] == DCC_ADDRESS_BROADCAST);
 }
 
-inline byte DccPacket::isMultiFunction() {
-	return (dcc_data[0] <= DCC_ADDRESS_SHORT_MAX) 
+inline boolean DccPacket::isMultiFunction() {
+	return (dcc_data[0] <= DCC_ADDRESS_SHORT_MAX)
 		|| (DCC_ADDRESS_LONG_MIN <= dcc_data[0] && dcc_data[0] <= DCC_ADDRESS_LONG_MAX);
 }
 
-inline byte DccPacket::isAddressShort() {
+inline boolean DccPacket::isAddressShort() {
 	return (dcc_data[0] <= DCC_ADDRESS_SHORT_MAX);
 }
 
-inline byte DccPacket::isAccessory() {
-	return (DCC_ADDRESS_ACCESSORY_MIN <= dcc_data[0] && dcc_data[0] <= DCC_ADDRESS_ACCESSORY_MAX); 
+inline boolean DccPacket::isAccessory() {
+	return (DCC_ADDRESS_ACCESSORY_MIN <= dcc_data[0] && dcc_data[0] <= DCC_ADDRESS_ACCESSORY_MAX);
 }
 
-inline byte DccPacket::isBasicAccessory() {
-	return isAccessory() && ((dcc_data[1] & DCC_ACCESSORY_KIND_MASK) == DCC_ACCESSORY_KIND_BASIC); 
+inline boolean DccPacket::isBasicAccessory() {
+	return isAccessory() && ((dcc_data[1] & DCC_ACCESSORY_KIND_MASK) == DCC_ACCESSORY_KIND_BASIC);
 }
 
-inline byte DccPacket::isBasicAccessoryBroadcast() {
+inline boolean DccPacket::isBasicAccessoryBroadcast() {
 	return (dcc_data[0] == DCC_ADDRESS_ACCESSORY_BROADCAST)
 		&& ((dcc_data[1] & (DCC_ACCESSORY_KIND_MASK | DCC_BA_ADDRESS_MASK_2)) == (DCC_ACCESSORY_KIND_BASIC | DCC_BA_ADDRESS_BROADCAST_2));
 }
 
-inline byte DccPacket::isExtendedAccessory() {
-	return isAccessory() && ((dcc_data[1] & DCC_ACCESSORY_KIND_MASK) == DCC_ACCESSORY_KIND_EXTENDED); 
+inline boolean DccPacket::isExtendedAccessory() {
+	return isAccessory() && ((dcc_data[1] & DCC_ACCESSORY_KIND_MASK) == DCC_ACCESSORY_KIND_EXTENDED);
 }
 
-inline byte DccPacket::isExtendedAccessoryBroadcast() {
+inline boolean DccPacket::isExtendedAccessoryBroadcast() {
 	return (dcc_data[0] == DCC_ADDRESS_ACCESSORY_BROADCAST)
 		&& (dcc_data[1] == (DCC_ACCESSORY_EXTENDED | DCC_EA_ADDRESS_BROADCAST_2 | DCC_EA_ADDRESS_BROADCAST_3));
 }
@@ -272,9 +272,9 @@ inline boolean DccPacket::isBroadcast() {
 	if (isMultiFunctionBroadcast())
 		return true;
 
-	if (dcc_data[0] != DCC_ADDRESS_ACCESSORY_BROADCAST)	
+	if (dcc_data[0] != DCC_ADDRESS_ACCESSORY_BROADCAST)
 		return false;
-	
+
 	return ((dcc_data[1] & (DCC_ACCESSORY_KIND_MASK | DCC_BA_ADDRESS_MASK_2)) == (DCC_ACCESSORY_KIND_BASIC | DCC_BA_ADDRESS_BROADCAST_2))
 		|| (dcc_data[1] == (DCC_ACCESSORY_EXTENDED | DCC_EA_ADDRESS_BROADCAST_2 | DCC_EA_ADDRESS_BROADCAST_3));
 }
@@ -297,7 +297,7 @@ inline word DccPacket::parseNumber(const char*& ch) {
 
 inline boolean DccPacket::parseBoolean(char ch) {
 	switch(ch) {
-		case '1': 
+		case '1':
 		case 'Y':
 		case 'y':
 		case 'T':

@@ -25,7 +25,7 @@
 
 DccProtocol DccRails;
 
-void DccProtocol::setup() {
+void DccProtocol::begin() {
     state = STATE_POWER_OFF;
     packet = NULL;
 

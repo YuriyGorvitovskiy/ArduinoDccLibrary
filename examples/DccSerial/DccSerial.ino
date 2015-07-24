@@ -29,7 +29,7 @@ void setup() {
     Serial.setTimeout(500); // half a second
 
     Serial.println("Initializing...");
-    DccCmd.setup();
+    DccCmd.begin();
     Serial.println("Ready");
 }
 

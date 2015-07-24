@@ -31,9 +31,9 @@ DccCommander::DccCommander()
 	IDLE.idle();
 }
 
-void DccCommander::setup() {
-	DccRails.setup();
-	DccState.setup();
+void DccCommander::begin() {
+	DccRails.begin();
+	DccState.begin();
 	power(true);
 }
 

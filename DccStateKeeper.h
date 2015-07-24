@@ -24,7 +24,7 @@ private:
 	byte    nextState;
 	
 public:
-	void setup();
+	void begin();
 	void resetSpeed();
 	void resetAll();
 	

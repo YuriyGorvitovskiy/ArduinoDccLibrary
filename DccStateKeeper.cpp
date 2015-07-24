@@ -69,7 +69,7 @@
 
 DccStateKeeper DccState;
 
-void DccStateKeeper::setup() {
+void DccStateKeeper::begin() {
 	nextState = 0;
 	state_count = EEPROM.read(DCC_EEPROM_ADDR_COUNT);
 	generation = EEPROM.read(DCC_EEPROM_ADDR_GENERATION);
